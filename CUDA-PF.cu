@@ -85,8 +85,6 @@ int main()
         double L, kappa, alpha, beta, gamma;
         double hx; double hy; double hz; double ht;
 	dim3 numBlocks, threadsPerBlock;
-        int i, j, k, n, m, P, Pm, W, E, S, N, U, B, temp;
-	double lxx, lyy, lzz, sum;
 
 	Nx = 32;
 	Ny = 32;
