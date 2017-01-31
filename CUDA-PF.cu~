@@ -131,64 +131,16 @@ int main()
         phase->SetNumberOfTuples(Nx * Ny * Nz);
 
 	for (iter = 0; iter < Nt; iter++) {
-        for (n=0; n < Ng; n++) {
-        for (i=0; i < Nx; i++) {
-        for (j=0; j < Ny; j++) {
-        for (k=0; k < Nz; k++) {
-        P = I3D(Nx, Ny, Nz, i, j, k, n);
-	W = I3D(Nx, Ny, Nz, i-1, j, k, n); E = I3D(Nx, Ny, Nz, i+1, j, k, n);
-	S = I3D(Nx, Ny, Nz, i, j-1, k, n); N = I3D(Nx, Ny, Nz, i, j+1, k, n);
-        B = I3D(Nx, Ny, Nz, i, j, k-1, n); U = I3D(Nx, Ny, Nz, i, j, k+1, n);
-	// check that thread is within domain (not on boundary or outside domain)
-	if (i > 0 && i < Nx-1 && j > 0 && j < Ny-1 && k>0 && k<Nz-1) {
-		lxx = (uh_old[W] - 2.0*uh_old[P] + uh_old[E])/pow(hx,2);
-		lyy = (uh_old[N] - 2.0*uh_old[P] + uh_old[S])/pow(hy,2);
-                lzz = (uh_old[U] - 2.0*uh_old[P] + uh_old[B])/pow(hz,2);
-
-              for (m=0; m < Ng && m!=n; m++) {
-                Pm = I3D(Nx, Ny, Nz, i, j, k, m);
-                sum=sum+pow(uh_old[Pm],2);
-              }
-
-        uh_new[P] = uh_old[P]+ht*(alpha*L*uh_old[P]-beta*L*pow(uh_old[P],3)-2*gamma*L*uh_old[P]*sum+kappa*L*(lxx+lyy+lzz));
-	}
-        if (i==0) {
-        uh_new[P] = uh_old[E];
-        }
-        if (j==0) {
-        uh_new[P] = uh_old[N];
-        }
-        if (k==0) {
-        uh_new[P] = uh_old[U];
-        }
-        if (i==Nx-1) {
-        temp = I3D(Nx, Ny, Nz, 0, j, k, n);
-        uh_new[P] = uh_old[temp];
-        }
-        if (j==Ny-1) {
-        temp = I3D(Nx, Ny, Nz, i, 0, k, n);
-        uh_new[P] = uh_old[temp];
-        }
-        if (k==Nz-1) {
-        temp = I3D(Nx, Ny, Nz, i, j, 0, n);
-        uh_new[P] = uh_old[temp];
-        }
-        pfh[P] = pfh[P] + pow(uh_new[P],2);
-        }
-
-        }
-        }
-        }
-		//pf3d_gpu<<<numBlocks, threadsPerBlock>>>(Nx, Ny, Nz, Ng, L, alpha, beta, gamma, kappa, ht, hx, hy, hz, ud_old.getData(), ud_new.getData(), pfd.getData());
-        //tmp_d = ud_new;
-        //ud_new = ud_old;
-        //ud_old = tmp_d;
+		pf3d_gpu<<<numBlocks, threadsPerBlock>>>(Nx, Ny, Nz, Ng, L, alpha, beta, gamma, kappa, ht, hx, hy, hz, ud_old.getData(), ud_new.getData(), pfd.getData());
+        tmp_d = ud_new;
+        ud_new = ud_old;
+        ud_old = tmp_d;
         tmp_h = uh_new;
         uh_new = uh_old;
         uh_old = tmp_h;
         char myfile[16];
         sprintf(myfile, "myfile_%d.vti", iter);
-        //pfd.get(pfh, Nx, Ny, Nz, 1);
+        pfd.get(pfh, Nx, Ny, Nz, 1);
         for (i=0; i < Nx; i++) {
         for (j=0; j < Ny; j++) {
         for (k=0; k < Nz; k++) {
